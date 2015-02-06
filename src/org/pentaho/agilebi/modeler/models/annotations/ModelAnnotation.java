@@ -231,6 +231,9 @@ public class ModelAnnotation<T extends AnnotationType> implements Serializable {
           throw new ModelerException( "Unable to find level: " + field );
         }
       }
+      case CatalogName: {
+
+      }
       default: {
         throw new IllegalStateException();
       }
@@ -293,6 +296,9 @@ public class ModelAnnotation<T extends AnnotationType> implements Serializable {
         // TODO
         throw new ModelerException( "Unable to find level: " + field );
       }
+      case CatalogName: {
+        return "CatalogName";
+      }
       default: {
         throw new IllegalStateException();
       }
@@ -333,7 +339,8 @@ public class ModelAnnotation<T extends AnnotationType> implements Serializable {
 
   public static enum Type {
     CREATE_MEASURE( "Create Measure" ),
-    CREATE_ATTRIBUTE( "Create Attribute" );
+    CREATE_ATTRIBUTE( "Create Attribute" ),
+    RENAME_CATALOG( "Rename Catalog" );
 
     private final String description;
 
@@ -405,7 +412,8 @@ public class ModelAnnotation<T extends AnnotationType> implements Serializable {
   public static enum SourceType {
     StreamField,
     HierarchyLevel,
-    Measure
+    Measure,
+    CatalogName
   }
 
 }
