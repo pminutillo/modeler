@@ -58,6 +58,8 @@ public class ModelAnnotation<T extends AnnotationType> implements Serializable {
 
   private SourceType sourceType = SourceType.StreamField;
 
+  private static String CATALOG_NAME_FIELD_PLACEHOLDER = "CatalogName";
+
   @MetaStoreAttribute
   private String name = UUID.randomUUID().toString(); // default random identifier
 
@@ -232,7 +234,7 @@ public class ModelAnnotation<T extends AnnotationType> implements Serializable {
         }
       }
       case CatalogName: {
-
+        return (CATALOG_NAME_FIELD_PLACEHOLDER);
       }
       default: {
         throw new IllegalStateException();
