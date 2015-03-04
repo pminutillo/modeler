@@ -295,6 +295,40 @@ public class ModelAnnotation<T extends AnnotationType> implements Serializable {
         // TODO
         throw new ModelerException( "Unable to find level: " + field );
       }
+
+      case CalculatedMember: {
+        if ( schema == null ) {
+          throw new ModelerException( "Unable to find calculatedMember: " + field );
+        }
+
+        // find Measure nodes
+        NodeList calculatedMembers = schema.getElementsByTagName( "CalculatedMember" );
+        if ( ( calculatedMembers == null ) || ( calculatedMembers.getLength() <= 0 ) ) {
+          throw new ModelerException( "Unable to find calculatedMember: " + field );
+        }
+
+        for ( int x = 0; x <= calculatedMembers.getLength(); x++ ) {
+          Node calculatedMember = calculatedMembers.item( x );
+          if ( calculatedMember != null ) {
+
+            // get measure name
+            Node nameNode = calculatedMember.getAttributes().getNamedItem( "name" );
+
+            if ( nameNode != null ) {
+              // match measure name to field
+              if ( nameNode.getNodeValue().equals(
+                field.substring( field.lastIndexOf( "[" ) + 1 ).replace( "]", "" )
+              ) ) {
+                return nameNode.getNodeValue();
+              }
+            }
+          }
+        }
+
+        // not found
+        throw new ModelerException( "Unable to find calculatedMember: " + field );
+      }
+
       default: {
         throw new IllegalStateException();
       }
@@ -346,7 +380,8 @@ public class ModelAnnotation<T extends AnnotationType> implements Serializable {
   public static enum Type {
     CREATE_MEASURE( "Create Measure" ),
     CREATE_ATTRIBUTE( "Create Attribute" ),
-    CREATE_DIMENSION_KEY( "Create Dimension Key" );
+    CREATE_DIMENSION_KEY( "Create Dimension Key"),
+	  CREATE_CALCULATED_MEMBER( "Create Calculated Member" );
 
     private final String description;
 
@@ -418,7 +453,8 @@ public class ModelAnnotation<T extends AnnotationType> implements Serializable {
   public static enum SourceType {
     StreamField,
     HierarchyLevel,
-    Measure
+    Measure,
+    CalculatedMember
   }
 
 }
