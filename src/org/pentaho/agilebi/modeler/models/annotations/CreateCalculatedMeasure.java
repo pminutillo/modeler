@@ -25,6 +25,9 @@ package org.pentaho.agilebi.modeler.models.annotations;
 import org.apache.commons.lang.StringUtils;
 import org.pentaho.agilebi.modeler.ModelerException;
 import org.pentaho.agilebi.modeler.ModelerWorkspace;
+import org.pentaho.agilebi.modeler.models.annotations.util.MondrianSchemaHandler;
+import org.pentaho.agilebi.modeler.models.annotations.util.NumberFormat;
+import org.pentaho.agilebi.modeler.models.annotations.util.schema.CalculatedMember;
 import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.metastore.persist.MetaStoreAttribute;
 import org.pentaho.metastore.persist.MetaStoreElementType;
@@ -48,9 +51,6 @@ import java.util.logging.Logger;
 public class CreateCalculatedMeasure extends AnnotationType {
   private static final long serialVersionUID = 5169827225345800226L;
   private static transient Logger logger = Logger.getLogger( AnnotationType.class.getName() );
-
-  private static final String CUBE_XPATH_EXPR = "/Schema/Cube";
-  private static final String CALCULATED_MEMBER_NODE_NAME = "CalculatedMember";
 
   private static final String NAME_ID = "name";
   private static final String NAME_NAME = "Name";
@@ -76,6 +76,31 @@ public class CreateCalculatedMeasure extends AnnotationType {
   private static final String VISIBLE_NAME = "Visible";
   private static final int VISIBLE_ORDER = 0;
 
+  public static final String NUMBER_FORMAT_ID = "numberFormat";
+  public static final String NUMBER_FORMAT_NAME = "Number Format";
+  public static final int NUMBER_FORMAT_ORDER = 1;
+
+  public static final String DECIMAL_PLACES_ID = "decimalPlaces";
+  public static final String DECIMAL_PLACES_NAME = "Decimal Places";
+  public static final int DECIMAL_PLACES_ORDER = 2;
+
+  public static final String MEASURE_CONTENT_ID = "measureContent";
+  public static final String MEASURE_CONTENT_NAME = "Measure Content";
+  public static final int MEASURE_CONTENT_ORDER = 3;
+
+  public static final String CALCULATE_SUBTOTALS_ID = "calculateSubtotals";
+  public static final String CALCULATE_SUBTOTALS_NAME = "Calculate Subtotals";
+  public static final int CALCULATE_SUBTOTALS_ORDER = 4;
+
+  public static final String CATALOG_NAME_ID = "catalogName";
+  public static final String CATALOG_NAME_NAME = "Catalog Name";
+  public static final int CATALOG_NAME_ORDER = 5;
+
+  public static final String CALCULATED_MEMBER_NODE_NAME = "CalculatedMember";
+  public static final String CALCULATED_MEMBER_NAME_ATTRIB = "name";
+  public static final String CALCULATED_MEMBER_COLUMN_ATTRIB = "column";
+  public static final String CALCULATED_MEMBER_AGGREGATOR_ATTRIB = "aggregator";
+  public static final String CUBE_XPATH_EXPR = "/Schema/Cube";
 
   @MetaStoreAttribute
   @ModelProperty( id = NAME_ID, name = NAME_NAME, order = NAME_ORDER )
@@ -101,6 +126,22 @@ public class CreateCalculatedMeasure extends AnnotationType {
   @ModelProperty( id = VISIBLE_ID, name = VISIBLE_NAME, order = VISIBLE_ORDER )
   private boolean visible;
 
+  @MetaStoreAttribute
+  @ModelProperty( id = NUMBER_FORMAT_ID, name = NUMBER_FORMAT_NAME, order = NUMBER_FORMAT_ORDER )
+  private NumberFormat numberFormat;
+
+  @MetaStoreAttribute
+  @ModelProperty( id = DECIMAL_PLACES_ID, name = DECIMAL_PLACES_NAME, order = DECIMAL_PLACES_ORDER )
+  private int decimalPlaces;
+
+  @MetaStoreAttribute
+  @ModelProperty( id = MEASURE_CONTENT_ID, name = MEASURE_CONTENT_NAME, order = MEASURE_CONTENT_ORDER )
+  private String measureContent;
+
+  @MetaStoreAttribute
+  @ModelProperty( id = CALCULATE_SUBTOTALS_ID, name = CALCULATE_SUBTOTALS_NAME, order = CALCULATE_SUBTOTALS_ORDER)
+  private boolean calculateSubtotals;
+
   /**
    * @param workspace
    * @param field
@@ -114,6 +155,7 @@ public class CreateCalculatedMeasure extends AnnotationType {
   }
 
   /**
+  /**
    * @param schema
    * @param field
    * @return
@@ -123,27 +165,24 @@ public class CreateCalculatedMeasure extends AnnotationType {
     if ( schema == null ) {
       return false;
     }
-    try {
-      XPathFactory xPathFactory = XPathFactory.newInstance();
-      XPath xPath = xPathFactory.newXPath();
-      StringBuffer xPathExpr = new StringBuffer();
-      xPathExpr.append( CUBE_XPATH_EXPR ); // TODO: Handle multiple cubes...
-      XPathExpression xPathExpression = xPath.compile( xPathExpr.toString() );
-      Node cube = (Node) xPathExpression.evaluate( schema, XPathConstants.NODE );
-      Element measureElement = null;
-      measureElement = schema.createElement( CALCULATED_MEMBER_NODE_NAME );
-      cube.appendChild( measureElement ); // TODO: Measures need to come after calculated measures
-      measureElement.setAttribute( NAME_ID, getName() );
-      measureElement.setAttribute( CAPTION_ID, getCaption() );
-      measureElement.setAttribute( DESCRIPTION_ID, getDescription() );
-      measureElement.setAttribute( DIMENSION_ID, getDimension() );
-      measureElement.setAttribute( FORMULA_ID, getFormula() );
-      measureElement.setAttribute( VISIBLE_ID, Boolean.toString( isVisible() ) );
-    } catch ( XPathExpressionException e ) {
-      throw new ModelerException( e );
-    }
+
+    MondrianSchemaHandler mondrianSchemaHandler = new MondrianSchemaHandler( schema );
+
+    CalculatedMember calculatedMember = new CalculatedMember();
+    calculatedMember.setName( this.getName() );
+    calculatedMember.setCaption( this.getCaption() );
+    calculatedMember.setDescription( this.getDescription() );
+    calculatedMember.setDimension( this.getDimension() );
+    calculatedMember.setFormula( this.getFormula() );
+    calculatedMember.setVisible( this.isVisible() );
+
+    mondrianSchemaHandler.addCalculatedMeasure( null, calculatedMember );
 
     return true;
+  }
+
+  private void insertCalculatedMeasureNode( Node cube, Element measureElement ){
+
   }
 
   @Override public void validate() throws ModelerException {
@@ -207,5 +246,33 @@ public class CreateCalculatedMeasure extends AnnotationType {
 
   public void setVisible( boolean visible ) {
     this.visible = visible;
+  }
+
+  public NumberFormat getNumberFormat() {
+    return numberFormat;
+  }
+
+  public void setNumberFormat( NumberFormat numberFormat ) {
+    this.numberFormat = numberFormat;
+  }
+
+  public int getDecimalPlaces() {
+    return decimalPlaces;
+  }
+
+  public void setDecimalPlaces( int decimalPlaces ) {
+    this.decimalPlaces = decimalPlaces;
+  }
+
+  public void setMeasureContent( String measureContent ) {
+    this.measureContent = measureContent;
+  }
+
+  public boolean isCalculateSubtotals() {
+    return calculateSubtotals;
+  }
+
+  public void setCalculateSubtotals( boolean calculateSubtotals ) {
+    this.calculateSubtotals = calculateSubtotals;
   }
 }
